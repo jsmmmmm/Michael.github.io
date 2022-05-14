@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  
+  <title>利用Rust构建一个REST API服务 | 香菜粉丝</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Rust 是一个拥有很多忠实粉丝的编程语言，还是很难找到一些用它构建的项目，而且掌握起来甚至有点难度。 想要开始学习一门编程语言最好的方式就是利用它去做一些有趣的项目，或者每天都使用它，如果你的公司在构建或者已经在使用微服务了，可以尝试一下使用rust把它重写一遍。 第一次使用Rust的时候，和学习其他语言一样，需要了解基础知识，在你了解基础语法和一些常用的概念后，就可以思考如何使用Rust进行异">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用Rust构建一个REST API服务">
+<meta property="og:url" content="https://blog.xcfans.top/%E5%88%A9%E7%94%A8Rust%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AAREST%20API%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:site_name" content="香菜粉丝">
+<meta property="og:description" content="Rust 是一个拥有很多忠实粉丝的编程语言，还是很难找到一些用它构建的项目，而且掌握起来甚至有点难度。 想要开始学习一门编程语言最好的方式就是利用它去做一些有趣的项目，或者每天都使用它，如果你的公司在构建或者已经在使用微服务了，可以尝试一下使用rust把它重写一遍。 第一次使用Rust的时候，和学习其他语言一样，需要了解基础知识，在你了解基础语法和一些常用的概念后，就可以思考如何使用Rust进行异">
+<meta property="og:locale">
+<meta property="article:published_time" content="2020-03-10T11:04:23.000Z">
+<meta property="article:modified_time" content="2022-05-14T15:20:37.220Z">
+<meta property="article:author" content="Shangjin">
+<meta property="article:tag" content="rust">
+<meta property="article:tag" content="api">
+<meta name="twitter:card" content="summary">
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/typing.css">
+
+  
+<link rel="stylesheet" href="/css/donate.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-利用Rust构建一个REST API服务" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <header id="header" class="header">
+  <nav class="mobile-nav">
+    <h1 class="nickname">NickName</h1>
+    <ul class="mobile-nav-menu">
+      <label for="mobile-menu-toggle"><a id="menu-button">&#9776; Menu</a></label>
+      <input type="checkbox" id="mobile-menu-toggle"/>
+      <ul class="mobile-nav-link">
+        
+        <a href="/">Home</a>
+        
+        <a href="/archives">Archives</a>
+        
+        <a href="/about">About</a>
+        
+      </ul>
+    </ul>
+  </nav>
+	
+		<nav id="main-nav" class="main-nav nav-left">
+	
+	
+	  <a class="main-nav-link" href="/">Home</a>
+	
+	  <a class="main-nav-link" href="/archives">Archives</a>
+	
+	  <a class="main-nav-link" href="/about">About</a>
+	
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      利用Rust构建一个REST API服务
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry typo" itemprop="articleBody">
+      
+        <p>Rust 是一个拥有很多忠实粉丝的编程语言，还是很难找到一些用它构建的项目，而且掌握起来甚至有点难度。</p>
+<p>想要开始学习一门编程语言最好的方式就是利用它去做一些有趣的项目，或者每天都使用它，如果你的公司在构建或者已经在使用微服务了，可以尝试一下使用rust把它重写一遍。</p>
+<p>第一次使用Rust的时候，和学习其他语言一样，需要了解基础知识，在你了解基础语法和一些常用的概念后，就可以思考如何使用Rust进行异步编程了，很多编程语言都在运行时内置了异步的运行模式，比如在一些发送请求或者等待后台运行的场景里面会使用到异步编程。</p>
+<p>补充一点，Tokio是一个事件驱动的非阻塞I &#x2F; O平台，用于使用Rust编程语言编写异步应用程序,很有可能你下一家公司就在用它，由于你会选择一些内置了Tokio的库来编写异步程序，因此接下来，我们会使用wrap来实现一个异步API平台。</p>
+<h2 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a>创建项目</h2><p>跟着下面的教程，你需要装下面列出的库：</p>
+<ul>
+<li>Wrap  用来创建API服务</li>
+<li>Tokio 运行异步服务器</li>
+<li>Serde 序列化输入的JSON</li>
+<li>parking_lot 为存储器提供读写锁</li>
+</ul>
+<p>首先，使用Cargo创一个新项目</p>
+<p><code>cargo new neat-api --bin</code></p>
+<p>将上面需要安装的依赖库添加到Cargo.toml文件里</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">…</span><br><span class="line">[dependencies]</span><br><span class="line">warp = <span class="string">&quot;0.2&quot;</span></span><br><span class="line">parking_lot = <span class="string">&quot;0.10.0&quot;</span></span><br><span class="line">serde = &#123; version = <span class="string">&quot;1.0&quot;</span>, features = [<span class="string">&quot;derive&quot;</span>] &#125;</span><br><span class="line">tokio = &#123; version = <span class="string">&quot;0.2&quot;</span>, features = [<span class="string">&quot;macros&quot;</span>] &#125;</span><br></pre></td></tr></table></figure>
+
+<p>为了第一次运行测试，在<code>main.rs</code>创建一个“Hello World” 例子</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> wrap:: Filter;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[tokio::main]</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">  <span class="comment">// GET /hello/warp =&gt; 200 OK with body &quot;Hello, warp!&quot;</span></span><br><span class="line">  <span class="keyword">let</span> <span class="variable">hello</span> = wrap::path!(<span class="string">&quot;hello&quot;</span> / <span class="type">String</span>)</span><br><span class="line">  		.<span class="title function_ invoke__">map</span>(|name| <span class="built_in">format!</span>(<span class="string">&quot;Hello, &#123;&#125;&quot;</span>, name));</span><br><span class="line">  </span><br><span class="line">  warp::<span class="title function_ invoke__">serve</span>(hello)</span><br><span class="line">  		.<span class="title function_ invoke__">run</span>(([<span class="number">127</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>], <span class="number">3030</span>))</span><br><span class="line">  		.<span class="keyword">await</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Filters</code>  是解析请求和匹配路由的方法，使用<code>cargo run</code> 来启动服务，在浏览器中输入<code>http://localhost:3030/hello/WHATEVER</code>, warp将通过Filiters发送请求，然后执行触发请求。</p>
+<p>在<code>let hello=...</code>,我们创建了一个新的路由, 意味着所有通过&#x2F;hello的请求都由该方法处理，因此，它将返回Hello， WHATEVER。</p>
+<p>如果我们在浏览器访问<code>http://localhost:3030/hello/new/WHATEVER</code>,程序将返回404，因我们没有定义&#x2F;hello&#x2F;new + String 相关的过滤器。</p>
+<h2 id="创建API"><a href="#创建API" class="headerlink" title="创建API"></a>创建API</h2><p>接下来，我们创建一个真正的API来演示上面介绍的概念，用API实现一个购物车列表是很好的例子，我们可以在列表里添加条目，更新或者删除条目，还可以看到整个列表，因此，我们利用<code>GET</code>,<code>DELETE</code>,<code>PUT</code>,<code>POST</code>HTTP方法实现四个不同的路由。</p>
+<h2 id="创建本地存储"><a href="#创建本地存储" class="headerlink" title="创建本地存储"></a>创建本地存储</h2><p>除了路由，还需要将状态存储在文件或局部变量中，在异步环境中，我们需要确保在访问存储器的同一时间只有一个状态，因此，线程之间不能存在不一致的情况，在Rust中，利用<code>Arc</code>可以让编译器知道何时该删除值，何时控制读写锁（<code>RwLock</code>），这样，不会有两个参数在不同的线程上操作同一块内存。</p>
+<p>如下是实现方法：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> parking_lot::RwLock;</span><br><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"><span class="keyword">use</span> std::sync::Arc;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> <span class="title class_">Items</span> = HashMap&lt;<span class="type">String</span>, <span class="type">i32</span>&gt;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Debug, Deserialize, Serialize, Clone)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Item</span> &#123;</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    quantity: <span class="type">i32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Clone)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Store</span> &#123;</span><br><span class="line">  grocery_list: Arc&lt;RwLock&lt;Items&gt;&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Store</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        Store &#123;</span><br><span class="line">            grocery_list: Arc::<span class="title function_ invoke__">new</span>(RwLock::<span class="title function_ invoke__">new</span>(HashMap::<span class="title function_ invoke__">new</span>())),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Posting</code>一个条目到列表里</p>
+<p>现在我们添加第一个路由，添加条目到列表里，将POST参数请求添加进路由地址中，我们的应用需要返回一个HTTPcode让请求者知道他们是否请求成功，wrap通过HTTP库提供了一个基础形式，这些我们也要添加进去。</p>
+<p><code>use warp::&#123;http, Filter&#125;;</code></p>
+<p>POST方法的请求方法如下所示</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">add_grocery_list_item</span>(</span><br><span class="line">		item: Item,</span><br><span class="line">  	store: Store</span><br><span class="line">  	) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="keyword">impl</span> <span class="title class_">warp</span>::Reply, warp::Rejection&gt; &#123;</span><br><span class="line">      store.grocery_list.<span class="title function_ invoke__">write</span>().<span class="title function_ invoke__">insert</span>(item.name, item.quantity);</span><br><span class="line">      </span><br><span class="line">      <span class="title function_ invoke__">Ok</span>(warp::reply::<span class="title function_ invoke__">with_status</span>(</span><br><span class="line">        <span class="string">&quot;Added item to the grocery list&quot;</span>,</span><br><span class="line">        http::StatusCode::CREATED,</span><br><span class="line">      ))</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>warp框架提供了一个<code>reply with status</code>的选项，因此我们可以添加文本以及标准的HTTP状态码，以便让请求者知道是否请求成功或者需要再次请求一次。</p>
+<p>现在增加新的路由地址，并调用上面写好的方法。由于你可以为这个方法调用JSON，需要新建一个<code>json_body</code>功能函数将<code>Item</code>从请求的<code>body</code>中提取出来。</p>
+<p>额外我们需要将存储方法通过克隆传递给每一个参数，创建一个warp filter。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">fn</span> <span class="title function_">json_body</span>() <span class="punctuation">-&gt;</span> <span class="keyword">impl</span> <span class="title class_">Filter</span>&lt;Extract = (Item,), Error = warp::Rejection&gt; + <span class="built_in">Clone</span>&#123;</span><br><span class="line">	    <span class="comment">// When accepting a body, we want a JSON body</span></span><br><span class="line">    	<span class="comment">// (and to reject huge payloads)...</span></span><br><span class="line">		warp::body::<span class="title function_ invoke__">content_length_limit</span>(<span class="number">1024</span>*<span class="number">16</span>).<span class="title function_ invoke__">and</span>(warp::body::<span class="title function_ invoke__">json</span>())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[tokio::main]</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">  <span class="keyword">let</span> <span class="variable">store</span> = Store::<span class="title function_ invoke__">new</span>();</span><br><span class="line">  <span class="keyword">let</span> <span class="variable">store_filter</span> = warp::<span class="title function_ invoke__">any</span>().<span class="title function_ invoke__">map</span>(<span class="keyword">move</span> || store.<span class="title function_ invoke__">clone</span>());</span><br><span class="line">  <span class="keyword">let</span> <span class="variable">add_items</span> = warp::<span class="title function_ invoke__">post</span>()</span><br><span class="line">  		.<span class="title function_ invoke__">and</span>(warp::<span class="title function_ invoke__">path</span>(<span class="string">&quot;v1&quot;</span>))</span><br><span class="line">  		.<span class="title function_ invoke__">and</span>(warp::<span class="title function_ invoke__">path</span>(<span class="string">&quot;groceries&quot;</span>))</span><br><span class="line">  		.<span class="title function_ invoke__">and</span>(warp::path.<span class="title function_ invoke__">end</span>())</span><br><span class="line">  		.<span class="title function_ invoke__">and</span>(<span class="title function_ invoke__">json_body</span>())</span><br><span class="line">  		.<span class="title function_ invoke__">and</span>(store_filter.<span class="title function_ invoke__">clone</span>())</span><br><span class="line">  		.<span class="title function_ invoke__">and_then</span>(add_grocery_list_item);</span><br><span class="line">  </span><br><span class="line">  warp::<span class="title function_ invoke__">serve</span>(add_items)</span><br><span class="line">  		.<span class="title function_ invoke__">run</span>(([<span class="number">127</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>], <span class="number">3030</span>))</span><br><span class="line">  		.<span class="keyword">await</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来通过curl或者Postman通过POST请求测试服务，现在它将是一个可以独立处理HTTP请求的服务了，通过</p>
+<p><code>cargo run</code>启动服务，然后在新的窗口中运行下面的命令。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl --location --request POST &#x27;localhost:3030/v1/groceries&#x27; \</span><br><span class="line">--header &#x27;Content-Type: application/json&#x27; \</span><br><span class="line">--header &#x27;Content-Type: text/plain&#x27; \</span><br><span class="line">--data-raw &#x27;&#123;</span><br><span class="line">    &quot;name&quot;: &quot;apple&quot;,</span><br><span class="line">    &quot;quantity&quot;: 3</span><br><span class="line">&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="获取列表"><a href="#获取列表" class="headerlink" title="获取列表"></a>获取列表</h2><p>现在我们可以通过post将条目添加到列表中，但是我们不能检索它们，我们需要为<code>GET</code>新建另一个路由，我们不需要为这个路由解析Json。</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#[tokio::main]</span></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">main</span>() &#123;</span><br><span class="line">		<span class="keyword">let</span> <span class="variable">store</span> = Store::<span class="title function_ invoke__">new</span>();</span><br><span class="line">  	<span class="keyword">let</span> <span class="variable">store_filter</span> = warp::<span class="title function_ invoke__">any</span>().<span class="title function_ invoke__">map</span>(<span class="keyword">move</span> || store.<span class="title function_ invoke__">clone</span>());</span><br><span class="line">  	</span><br><span class="line">  	<span class="keyword">let</span> <span class="variable">add_items</span> = warp::<span class="title function_ invoke__">post</span>()</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(warp::<span class="title function_ invoke__">path</span>(<span class="string">&quot;v1&quot;</span>))</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(warp::<span class="title function_ invoke__">path</span>(<span class="string">&quot;groceries&quot;</span>))</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(warp::path::<span class="title function_ invoke__">end</span>())</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(<span class="title function_ invoke__">json_body</span>())</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(store_filter.<span class="title function_ invoke__">clone</span>())</span><br><span class="line">  			.<span class="title function_ invoke__">and_then</span>(add_grocery_list_item);</span><br><span class="line">  	</span><br><span class="line">  	<span class="keyword">let</span> <span class="variable">get_items</span> = warp::<span class="title function_ invoke__">get</span>()</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(warp::<span class="title function_ invoke__">path</span>(<span class="string">&quot;v1&quot;</span>))</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(warp::<span class="title function_ invoke__">path</span>(<span class="string">&quot;groceries&quot;</span>))</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(warp::path::<span class="title function_ invoke__">end</span>())</span><br><span class="line">  			.<span class="title function_ invoke__">and</span>(store_filter.<span class="title function_ invoke__">clone</span>())</span><br><span class="line">  			.<span class="title function_ invoke__">and_then</span>(get_grocery_list);</span><br><span class="line">  	</span><br><span class="line">  	<span class="keyword">let</span> <span class="variable">routes</span> = add_items.<span class="title function_ invoke__">or</span>(get_items);</span><br><span class="line">  	</span><br><span class="line">  	warp::<span class="title function_ invoke__">serve</span>(routes)</span><br><span class="line">  			.<span class="title function_ invoke__">run</span>(([<span class="number">127</span>,<span class="number">0</span>,<span class="number">0</span>,<span class="number">1</span>],<span class="number">3030</span>))</span><br><span class="line">  			.<span class="keyword">await</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>当你研究<code>Arc</code>背后的数据结构时，你会体会到到异步的存在，你将需要先对<code>RwLock</code>中的数据先进行<code>.read()</code>然后进行<code>.iter()</code>操作，因此新建一个变量用来返回给请求者，由于Rust所有权模型的性质，您不能简单地阅读并返回底层的杂货清单。方法如下：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">get_grocery_list</span>(</span><br><span class="line">    store: Store</span><br><span class="line">    ) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="keyword">impl</span> <span class="title class_">warp</span>::Reply, warp::Rejection&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">result</span> = HashMap::<span class="title function_ invoke__">new</span>();</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">r</span> = store.grocery_list.<span class="title function_ invoke__">read</span>();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">for</span> (key,value) <span class="keyword">in</span> r.<span class="title function_ invoke__">iter</span>() &#123;</span><br><span class="line">            result.<span class="title function_ invoke__">insert</span>(key, value);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(warp::reply::<span class="title function_ invoke__">json</span>(</span><br><span class="line">            &amp;result</span><br><span class="line">        ))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>最后缺少的两个方法是<code>UPDATE</code>和<code>DELETE</code>。 对于<code>DELETE</code>，可以直接复制<code>add_grocery_list_item</code>，但是要使用<code>.remove（）</code>代替<code>.insert（）</code>。</p>
+<p>一种特殊情况是<code>update</code>。 Rust HashMap实现也使用.insert（），但是如果键不存在，它会更新值而不是创建新条目。</p>
+<p>因此，只需重命名该方法，然后为POST和PUT调用它即可。</p>
+<p>对于DELETE方法，只需要传递项目的名称，创建一个新结构，并为该新类型添加另一个parse_json（）方法。</p>
+<p>可以简单地重命名add_grocery_list_item方法以将其命名为update_grocery_list，并为<code>warp :: post（）</code>和<code>warp :: put（）</code>对其进行调用。 您的完整代码应如下所示：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">use</span> warp::&#123;http, Filter&#125;;</span><br><span class="line"><span class="keyword">use</span> parking_lot::RwLock;</span><br><span class="line"><span class="keyword">use</span> std::collections::HashMap;</span><br><span class="line"><span class="keyword">use</span> std::sync::Arc;</span><br><span class="line"><span class="keyword">use</span> serde::&#123;Serialize, Deserialize&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> <span class="title class_">Items</span> = HashMap&lt;<span class="type">String</span>, <span class="type">i32</span>&gt;;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Debug, Deserialize, Serialize, Clone)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Id</span> &#123;</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Debug, Deserialize, Serialize, Clone)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Item</span> &#123;</span><br><span class="line">    name: <span class="type">String</span>,</span><br><span class="line">    quantity: <span class="type">i32</span>,</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#[derive(Clone)]</span></span><br><span class="line"><span class="keyword">struct</span> <span class="title class_">Store</span> &#123;</span><br><span class="line">  grocery_list: Arc&lt;RwLock&lt;Items&gt;&gt;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">impl</span> <span class="title class_">Store</span> &#123;</span><br><span class="line">    <span class="keyword">fn</span> <span class="title function_">new</span>() <span class="punctuation">-&gt;</span> <span class="keyword">Self</span> &#123;</span><br><span class="line">        Store &#123;</span><br><span class="line">            grocery_list: Arc::<span class="title function_ invoke__">new</span>(RwLock::<span class="title function_ invoke__">new</span>(HashMap::<span class="title function_ invoke__">new</span>())),</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">update_grocery_list</span>(</span><br><span class="line">    item: Item,</span><br><span class="line">    store: Store</span><br><span class="line">    ) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="keyword">impl</span> <span class="title class_">warp</span>::Reply, warp::Rejection&gt; &#123;</span><br><span class="line">        store.grocery_list.<span class="title function_ invoke__">write</span>().<span class="title function_ invoke__">insert</span>(item.name, item.quantity);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(warp::reply::<span class="title function_ invoke__">with_status</span>(</span><br><span class="line">            <span class="string">&quot;Added items to the grocery list&quot;</span>,</span><br><span class="line">            http::StatusCode::CREATED,</span><br><span class="line">        ))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">delete_grocery_list_item</span>(</span><br><span class="line">    id: Id,</span><br><span class="line">    store: Store</span><br><span class="line">    ) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="keyword">impl</span> <span class="title class_">warp</span>::Reply, warp::Rejection&gt; &#123;</span><br><span class="line">        store.grocery_list.<span class="title function_ invoke__">write</span>().<span class="title function_ invoke__">remove</span>(&amp;id.name);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(warp::reply::<span class="title function_ invoke__">with_status</span>(</span><br><span class="line">            <span class="string">&quot;Removed item from grocery list&quot;</span>,</span><br><span class="line">            http::StatusCode::OK,</span><br><span class="line">        ))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">async</span> <span class="keyword">fn</span> <span class="title function_">get_grocery_list</span>(</span><br><span class="line">    store: Store</span><br><span class="line">    ) <span class="punctuation">-&gt;</span> <span class="type">Result</span>&lt;<span class="keyword">impl</span> <span class="title class_">warp</span>::Reply, warp::Rejection&gt; &#123;</span><br><span class="line">        <span class="keyword">let</span> <span class="keyword">mut </span><span class="variable">result</span> = HashMap::<span class="title function_ invoke__">new</span>();</span><br><span class="line">        <span class="keyword">let</span> <span class="variable">r</span> = store.grocery_list.<span class="title function_ invoke__">read</span>();</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">for</span> (key,value) <span class="keyword">in</span> r.<span class="title function_ invoke__">iter</span>() &#123;</span><br><span class="line">            result.<span class="title function_ invoke__">insert</span>(key, value);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="title function_ invoke__">Ok</span>(warp::reply::<span class="title function_ invoke__">json</span>(</span><br><span class="line">            &amp;result</span><br><span class="line">        ))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">delete_json</span>() <span class="punctuation">-&gt;</span> <span class="keyword">impl</span> <span class="title class_">Filter</span>&lt;Extract = (Id,), Error = warp::Rejection&gt; + <span class="built_in">Clone</span> &#123;</span><br><span class="line">    <span class="comment">// When accepting a body, we want a JSON body</span></span><br><span class="line">    <span class="comment">// (and to reject huge payloads)...</span></span><br><span class="line">    warp::body::<span class="title function_ invoke__">content_length_limit</span>(<span class="number">1024</span> * <span class="number">16</span>).<span class="title function_ invoke__">and</span>(warp::body::<span class="title function_ invoke__">json</span>())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">fn</span> <span class="title function_">post_json</span>() <span class="punctuation">-&gt;</span> <span class="keyword">impl</span> <span class="title class_">Filter</span>&lt;Extract = (Item,), Error = warp::Rejection&gt; + <span class="built_in">Clone</span> &#123;</span><br><span class="line">    <span class="comment">// When accepting a body, we want a JSON body</span></span><br><span class="line">    <span class="comment">// (and to reject huge payloads)...</span></span><br><span class="line">    warp::body::<span class="title function_ invoke__">content_length_limit</span>(<span class="number">1024</span> * <span class="number">16</span>).<span class="title function_ invoke__">and</span>(warp::body::<span class="title function_ invoke__">json</span>())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>测试脚本如下：</p>
+<p>POST</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl --location --request POST &#x27;localhost:3030/v1/groceries&#x27; \</span><br><span class="line">--header &#x27;Content-Type: application/json&#x27; \</span><br><span class="line">--header &#x27;Content-Type: text/plain&#x27; \</span><br><span class="line">--data-raw &#x27;&#123;</span><br><span class="line">    &quot;name&quot;: &quot;apple&quot;,</span><br><span class="line">    &quot;quantity&quot;: 3</span><br><span class="line">&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>UPDATE</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">curl --location --request PUT &#x27;localhost:3030/v1/groceries&#x27; \</span><br><span class="line">--header &#x27;Content-Type: application/json&#x27; \</span><br><span class="line">--header &#x27;Content-Type: text/plain&#x27; \</span><br><span class="line">--data-raw &#x27;&#123;</span><br><span class="line">    &quot;name&quot;: &quot;apple&quot;,</span><br><span class="line">    &quot;quantity&quot;: 5</span><br><span class="line">&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>GET</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">curl --location --request GET &#x27;localhost:3030/v1/groceries&#x27; \</span><br><span class="line">--header &#x27;Content-Type: application/json&#x27; \</span><br><span class="line">--header &#x27;Content-Type: text/plain&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>DELETE</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">curl --location --request DELETE &#x27;localhost:3030/v1/groceries&#x27; \</span><br><span class="line">--header &#x27;Content-Type: application/json&#x27; \</span><br><span class="line">--header &#x27;Content-Type: text/plain&#x27; \</span><br><span class="line">--data-raw &#x27;&#123;</span><br><span class="line">    &quot;name&quot;: &quot;apple&quot;</span><br><span class="line">&#125;&#x27;</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>翻译自 Creating a REST API in Rust with warp，作者：Bastian Gruber</p>
+<p>原文链接： <a target="_blank" rel="noopener" href="https://blog.logrocket.com/creating-a-rest-api-in-rust-with-warp/">https://blog.logrocket.com/creating-a-rest-api-in-rust-with-warp/</a></p>
+</blockquote>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/%E5%88%A9%E7%94%A8Rust%E6%9E%84%E5%BB%BA%E4%B8%80%E4%B8%AAREST%20API%E6%9C%8D%E5%8A%A1/" class="article-date">
+  <time class="dt-published" datetime="2020-03-10T11:04:23.000Z" itemprop="datePublished">2020-03-10</time>
+</a>
+
+        </li>
+        
+          <li>
+            <span class="label">Category:</span>
+            
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Tech/">Tech</a>
+  </div>
+
+
+          </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/api/" rel="tag">api</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/rust/" rel="tag">rust</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/%E7%94%A8Python%E5%81%9A%E4%B8%80%E4%B8%AATelegram%E7%9A%84%E6%96%B0%E9%97%BBBot/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          用Python做一个Telegram的新闻Bot
+        
+      </div>
+    </a>
+  
+  
+    <span id="article-nav-older" class="article-nav-link-wrap older"></span>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>ipsum dolor sit amet, <strong>consectetur adipiscing elit.</strong> Fusce eget urna vitae velit <em>eleifend interdum at ac nisi. In nec ligula lacus. Cum sociis natoque</em> penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed eu cursus erat, ut dapibus quam. Post</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/typing.js"></script>
+
+<!--[if lt IE 9]>
+<script src="https://cdn.jsdelivr.net/npm/html5shiv@3/dist/html5shiv.min.js"></script>
+<![endif]-->
+
+
+
+
+
+
+
+    </div>
+  </body>
+</html>

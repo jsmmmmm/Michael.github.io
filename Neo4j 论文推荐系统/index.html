@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  
+  <title>基于Neo4j的医学论文推荐系统 | 香菜粉丝</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言经过前面几篇官方文档的学习，Neo4j中的实体和关系之间的查询和计算，以及APOC的使用都过了一遍，接下来，我准备自己动手，贴合日常工作的业务，利用Neo4j构建一个基于内容和关系的论文推荐系统。 在现实世界中，医药工作者常常需要阅读大量的学术论文来提高自己的知识储备，了解前沿学术发展成果。 准备生物科学相关的论文网站PUBMED上有成千上万的论文集，学术工作者通常利用关键字来搜索自己想获取的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Neo4j的医学论文推荐系统">
+<meta property="og:url" content="https://blog.xcfans.top/Neo4j%20%E8%AE%BA%E6%96%87%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="香菜粉丝">
+<meta property="og:description" content="前言经过前面几篇官方文档的学习，Neo4j中的实体和关系之间的查询和计算，以及APOC的使用都过了一遍，接下来，我准备自己动手，贴合日常工作的业务，利用Neo4j构建一个基于内容和关系的论文推荐系统。 在现实世界中，医药工作者常常需要阅读大量的学术论文来提高自己的知识储备，了解前沿学术发展成果。 准备生物科学相关的论文网站PUBMED上有成千上万的论文集，学术工作者通常利用关键字来搜索自己想获取的">
+<meta property="og:locale">
+<meta property="og:image" content="https://ftp.bmp.ovh/imgs/2021/03/ba7767b49c82bf7b.png">
+<meta property="og:image" content="https://ftp.bmp.ovh/imgs/2021/03/9a0f8cc6e44a5543.png">
+<meta property="og:image" content="https://ftp.bmp.ovh/imgs/2021/03/2a1b9e0a887dabb8.png">
+<meta property="og:image" content="https://ftp.bmp.ovh/imgs/2021/03/a7ec5e34d123a139.png">
+<meta property="article:published_time" content="2021-03-10T06:31:14.000Z">
+<meta property="article:modified_time" content="2022-05-14T15:20:37.218Z">
+<meta property="article:author" content="Shangjin">
+<meta property="article:tag" content="Neo4j, NLP, 推荐系统, 论文, covid-19">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ftp.bmp.ovh/imgs/2021/03/ba7767b49c82bf7b.png">
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/typing.css">
+
+  
+<link rel="stylesheet" href="/css/donate.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-Neo4j 论文推荐系统" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <header id="header" class="header">
+  <nav class="mobile-nav">
+    <h1 class="nickname">NickName</h1>
+    <ul class="mobile-nav-menu">
+      <label for="mobile-menu-toggle"><a id="menu-button">&#9776; Menu</a></label>
+      <input type="checkbox" id="mobile-menu-toggle"/>
+      <ul class="mobile-nav-link">
+        
+        <a href="/">Home</a>
+        
+        <a href="/archives">Archives</a>
+        
+        <a href="/about">About</a>
+        
+      </ul>
+    </ul>
+  </nav>
+	
+		<nav id="main-nav" class="main-nav nav-left">
+	
+	
+	  <a class="main-nav-link" href="/">Home</a>
+	
+	  <a class="main-nav-link" href="/archives">Archives</a>
+	
+	  <a class="main-nav-link" href="/about">About</a>
+	
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      基于Neo4j的医学论文推荐系统
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry typo" itemprop="articleBody">
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>经过前面几篇官方文档的学习，Neo4j中的实体和关系之间的查询和计算，以及APOC的使用都过了一遍，接下来，我准备自己动手，贴合日常工作的业务，利用Neo4j构建一个基于内容和关系的论文推荐系统。</p>
+<p>在现实世界中，医药工作者常常需要阅读大量的学术论文来提高自己的知识储备，了解前沿学术发展成果。</p>
+<h2 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h2><p>生物科学相关的论文网站PUBMED上有成千上万的论文集，学术工作者通常利用关键字来搜索自己想获取的内容，这种方式虽然高效，但很容易忽略掉一些关联性高且重要的论文。</p>
+<p>为了实验使用，我从pubmed上找了几篇和covid-19主题相关的论文，从以下两点用知识图谱构建推荐策略：</p>
+<ol>
+<li>利用Keywords，假设用户阅读了和covid-19和vaccine等关键词相关的内容，我们根据关键词和文章的关系来推荐其他相关的论文</li>
+<li>利用作者之间的关系，假设用户阅读了Steve的论文，那潜在的和Steve有合著论文关系作者的论文也有可能是用户所感兴趣的。</li>
+</ol>
+<p>为了实验使用，我从Pubmed上简单复制下来几篇论文的Title，Authors，Abstract和Keywords作为实验数据，数据在我本地，如果需要，可以邮箱联系我。</p>
+<p>下面我贴出代码，用于将数据加载进入Neo4j和创建实体之间的关系</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"># coding: utf-8</span><br><span class="line"># author: xcfans</span><br><span class="line"># This program is used for convert xlxs to neo4j format</span><br><span class="line"></span><br><span class="line">import pandas as pd</span><br><span class="line">from py2neo import Graph</span><br><span class="line"></span><br><span class="line">graph = Graph(</span><br><span class="line">    &quot;bolt://127.0.0.1:7687&quot;,</span><br><span class="line">    username=&quot;pubmed&quot;,</span><br><span class="line">    password=&quot;123456&quot;</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">def add_paper_entity():</span><br><span class="line">    df = pd.read_excel(&#x27;../data/covid-19.xlsx&#x27;)</span><br><span class="line">    for row in df.iterrows():</span><br><span class="line">        t = row[1][&#x27;title&#x27;]</span><br><span class="line">        a = row[1][&#x27;abstract&#x27;]</span><br><span class="line">        #doi = row[1][&#x27;doi&#x27;]</span><br><span class="line">        #print(&quot;MERGE(p: Paper&#123;title: &#x27;%s&#x27;, abstract: &#x27;%s&#x27;&#125;)&quot; % (t, a))</span><br><span class="line"></span><br><span class="line">        graph.run(&#x27;MERGE(p: Paper&#123;title: &quot;%s&quot;, abstract: &quot;%s&quot;&#125;)&#x27; % (t.replace(&quot;&#x27;&quot;,&quot;&quot;).strip(), a.replace(&quot;&#x27;&quot;,&quot;&quot;).strip()))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def add_keyword_entity():</span><br><span class="line">    df = pd.read_excel(&#x27;../data/covid-19.xlsx&#x27;)</span><br><span class="line">    for row in df.iterrows():</span><br><span class="line"></span><br><span class="line">        keywords = str(row[1][&#x27;keywords&#x27;]).split(&#x27;;&#x27;)</span><br><span class="line">        for keyword in keywords:</span><br><span class="line">            graph.run(&#x27;MERGE(p: Keyword&#123;name: &quot;%s&quot;&#125;)&#x27; % (keyword.replace(&quot;&#x27;&quot;,&quot;&quot;).strip()))</span><br><span class="line"></span><br><span class="line">def add_author_entity():</span><br><span class="line">    df = pd.read_excel(&#x27;../data/covid-19.xlsx&#x27;)</span><br><span class="line">    for row in df.iterrows():</span><br><span class="line"></span><br><span class="line">        authors = str(row[1][&#x27;authors&#x27;]).split(&#x27;,&#x27;)</span><br><span class="line">        for author in authors:</span><br><span class="line">         </span><br><span class="line">            graph.run(&#x27;MERGE(p: Author&#123;name: &quot;%s&quot;&#125;)&#x27; % (author.replace(&quot;&#x27;&quot;,&quot;&quot;).strip()))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def add_keyword_relation():</span><br><span class="line">    df = pd.read_excel(&#x27;../data/covid-19.xlsx&#x27;)</span><br><span class="line">    for row in df.iterrows():</span><br><span class="line">        t = row[1][&#x27;title&#x27;]</span><br><span class="line">        a = row[1][&#x27;abstract&#x27;]</span><br><span class="line">        keywords = str(row[1][&#x27;keywords&#x27;]).split(&#x27;;&#x27;)</span><br><span class="line">        for keyword in keywords:</span><br><span class="line">            if keyword == &#x27;nan&#x27;:</span><br><span class="line">                continue</span><br><span class="line">            print(keyword)</span><br><span class="line">            a = graph.run(</span><br><span class="line">                &quot;MATCH(p: Paper), (k: Keyword) \</span><br><span class="line">                WHERE p.title=&#x27;%s&#x27; AND k.name=&#x27;%s&#x27;\</span><br><span class="line">                CREATE(p)-[rel:%s]-&gt;(kk)\</span><br><span class="line">                RETURN rel&quot; % (t.replace(&quot;&#x27;&quot;,&quot;&quot;).strip(), keyword.replace(&quot;&#x27;&quot;,&quot;&quot;).strip(), &quot;keyword&quot;)</span><br><span class="line">            )</span><br><span class="line">            print(a)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">def add_author_relation():</span><br><span class="line">    df = pd.read_excel(&#x27;../data/covid-19.xlsx&#x27;)</span><br><span class="line">    for row in df.iterrows():</span><br><span class="line">        t = row[1][&#x27;title&#x27;]</span><br><span class="line">        authors = str(row[1][&#x27;authors&#x27;]).split(&#x27;,&#x27;)</span><br><span class="line">        for author in authors:</span><br><span class="line">            if author == &#x27;nan&#x27;:</span><br><span class="line">                continue</span><br><span class="line">            print(author)</span><br><span class="line">            a = graph.run(</span><br><span class="line">                &quot;MATCH(p: Paper), (a: Author) \</span><br><span class="line">                WHERE p.title=&#x27;%s&#x27; AND a.name=&#x27;%s&#x27;\</span><br><span class="line">                CREATE(p)-[rel:%s]-&gt;(a)\</span><br><span class="line">                RETURN rel&quot; % (t.replace(&quot;&#x27;&quot;,&quot;&quot;).strip(), author.replace(&quot;&#x27;&quot;,&quot;&quot;).strip(), &quot;written_by&quot;)</span><br><span class="line">            )</span><br><span class="line">            print(a)</span><br><span class="line"></span><br><span class="line">add_author_entity()</span><br><span class="line">add_keyword_entity()</span><br><span class="line">add_paper_entity()</span><br><span class="line">add_keyword_relation()</span><br><span class="line">add_author_relation()</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>我们看看结果：</p>
+<p><code>Match (p:Paper)-[r:written_by]-(a:Author) Return p,r,a</code></p>
+<p><img src="https://ftp.bmp.ovh/imgs/2021/03/ba7767b49c82bf7b.png"></p>
+<p>没问题，所有数据和关系已经倒入成功，那么利用上面的假设</p>
+<blockquote>
+<ol>
+<li>利用Keywords，假设用户阅读了和covid-19和vaccine等关键词相关的内容，我们根据关键词和文章的关系来推荐其他相关的论文</li>
+<li>利用作者之间的关系，假设用户阅读了Steve的论文，那潜在的和Steve有合著论文关系作者的论文也有可能是用户所感兴趣的。</li>
+</ol>
+</blockquote>
+<h3 id="针对第一种假设，我们构造如下的Cypher"><a href="#针对第一种假设，我们构造如下的Cypher" class="headerlink" title="针对第一种假设，我们构造如下的Cypher:"></a>针对第一种假设，我们构造如下的Cypher:</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Match (a:Paper&#123;title:&quot;Treatment for COVID-19: An overview&quot;&#125;)-[:keyword]-&gt;(c:Keyword)&lt;-[:keyword]-(b:Paper) Return b</span><br></pre></td></tr></table></figure>
+
+<p>我们尝试从图数据库中找到，与<code>Treatment for COVID-19: An overview</code> 拥有共同关键字的论文。</p>
+<p>Result：</p>
+<p><img src="https://ftp.bmp.ovh/imgs/2021/03/9a0f8cc6e44a5543.png"></p>
+<p>我们可以从上图中清楚的看到，结果中的两篇论文都被<code>Covid-19</code>的关键字为关系相连，达到了利用关键字作为实体间关系的推荐效果。</p>
+<h3 id="针对第二种假设，我们构造如下的Cypher："><a href="#针对第二种假设，我们构造如下的Cypher：" class="headerlink" title="针对第二种假设，我们构造如下的Cypher："></a>针对第二种假设，我们构造如下的Cypher：</h3><p>为了实验效果，我们先找到哪两篇论文的作者是有合著关系的：</p>
+<p><img src="https://ftp.bmp.ovh/imgs/2021/03/2a1b9e0a887dabb8.png"></p>
+<p>上图中，我们可以清楚的看到每篇论文的作者情况，也可以发现有部分作者不止贡献了一篇论文，因此我们可以挖掘出三种论文推荐给用户：</p>
+<ol>
+<li>合著作者的论文</li>
+<li>与合著作者有合著关系的作者的论文（2度关系），同样的道理，我们可以利用同理挖掘出潜在客户，以及客户的潜在关系。</li>
+</ol>
+<p><img src="https://ftp.bmp.ovh/imgs/2021/03/a7ec5e34d123a139.png"></p>
+<p>Ok, 论文推荐的实验到此结束，拜拜啦！</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/Neo4j%20%E8%AE%BA%E6%96%87%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/" class="article-date">
+  <time class="dt-published" datetime="2021-03-10T06:31:14.000Z" itemprop="datePublished">2021-03-10</time>
+</a>
+
+        </li>
+        
+          <li>
+            <span class="label">Category:</span>
+            
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Tech/">Tech</a>
+  </div>
+
+
+          </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Neo4j-NLP-%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F-%E8%AE%BA%E6%96%87-covid-19/" rel="tag">Neo4j, NLP, 推荐系统, 论文, covid-19</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/Tech-Sharing-Graph/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Tech-Sharing-graph
+        
+      </div>
+    </a>
+  
+  
+    <a href="/%E5%9F%BA%E4%BA%8EKnowlege-Graph%20%E7%9A%84%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">基于Knowlege-Graph的内容推荐系统</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>ipsum dolor sit amet, <strong>consectetur adipiscing elit.</strong> Fusce eget urna vitae velit <em>eleifend interdum at ac nisi. In nec ligula lacus. Cum sociis natoque</em> penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed eu cursus erat, ut dapibus quam. Post</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/typing.js"></script>
+
+<!--[if lt IE 9]>
+<script src="https://cdn.jsdelivr.net/npm/html5shiv@3/dist/html5shiv.min.js"></script>
+<![endif]-->
+
+
+
+
+
+
+
+    </div>
+  </body>
+</html>

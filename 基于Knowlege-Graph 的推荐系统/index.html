@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  
+  <title>基于Knowlege-Graph的内容推荐系统 | 香菜粉丝</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="根据上一期的Neo4j NLP 自然语言处理实验，我们利用其数据完成  根据用户的阅读记录进行推荐 回顾在上一篇文章中，我们利用APOC中的NLP precerdures 将所有blog的实体和其在文章中的TF-IDF 权重计算出来并将其存储为关系ENTITY的属性  entity.score 原理假设我们的程序获取到用户点击了一篇他感兴趣的文章《This Week in Neo4j &amp;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于Knowlege-Graph的内容推荐系统">
+<meta property="og:url" content="https://blog.xcfans.top/%E5%9F%BA%E4%BA%8EKnowlege-Graph%20%E7%9A%84%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="香菜粉丝">
+<meta property="og:description" content="根据上一期的Neo4j NLP 自然语言处理实验，我们利用其数据完成  根据用户的阅读记录进行推荐 回顾在上一篇文章中，我们利用APOC中的NLP precerdures 将所有blog的实体和其在文章中的TF-IDF 权重计算出来并将其存储为关系ENTITY的属性  entity.score 原理假设我们的程序获取到用户点击了一篇他感兴趣的文章《This Week in Neo4j &amp;#">
+<meta property="og:locale">
+<meta property="og:image" content="https://ftp.bmp.ovh/imgs/2021/03/214501e331d47774.png">
+<meta property="og:image" content="https://ftp.bmp.ovh/imgs/2021/03/44f6cc7d0bd6fe03.png">
+<meta property="article:published_time" content="2021-03-08T06:12:14.000Z">
+<meta property="article:modified_time" content="2022-05-14T15:20:37.221Z">
+<meta property="article:author" content="Shangjin">
+<meta property="article:tag" content="Neo4j, NLP, 推荐系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://ftp.bmp.ovh/imgs/2021/03/214501e331d47774.png">
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/typing.css">
+
+  
+<link rel="stylesheet" href="/css/donate.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-基于Knowlege-Graph 的推荐系统" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <header id="header" class="header">
+  <nav class="mobile-nav">
+    <h1 class="nickname">NickName</h1>
+    <ul class="mobile-nav-menu">
+      <label for="mobile-menu-toggle"><a id="menu-button">&#9776; Menu</a></label>
+      <input type="checkbox" id="mobile-menu-toggle"/>
+      <ul class="mobile-nav-link">
+        
+        <a href="/">Home</a>
+        
+        <a href="/archives">Archives</a>
+        
+        <a href="/about">About</a>
+        
+      </ul>
+    </ul>
+  </nav>
+	
+		<nav id="main-nav" class="main-nav nav-left">
+	
+	
+	  <a class="main-nav-link" href="/">Home</a>
+	
+	  <a class="main-nav-link" href="/archives">Archives</a>
+	
+	  <a class="main-nav-link" href="/about">About</a>
+	
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      基于Knowlege-Graph的内容推荐系统
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry typo" itemprop="articleBody">
+      
+        <p>根据上一期的<a target="_blank" rel="noopener" href="http://www.xcfans.top/2021/03/03/Neo4j%20NLP%20%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">Neo4j NLP 自然语言处理</a>实验，我们利用其数据完成  <strong>根据用户的阅读记录进行推荐</strong></p>
+<h2 id="回顾"><a href="#回顾" class="headerlink" title="回顾"></a>回顾</h2><p>在上一篇文章中，我们利用APOC中的NLP precerdures 将所有blog的实体和其在文章中的TF-IDF 权重计算出来并将其存储为关系ENTITY的属性  <code>entity.score</code></p>
+<h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><p>假设我们的程序获取到用户点击了一篇他感兴趣的文章《This Week in Neo4j &amp;#8211; Neo4j vs NetworkX, Accessing Neo4j with Spring Boot 2.4, Image Annotation on GCP》，判断其在上停留的时间证明其对本文章有一定的兴趣。</p>
+<ol>
+<li><p>计算出次文章中权重最高的三个代表实体</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">MATCH (a:Article&#123;title:&quot;This Week in Neo4j &amp;#8211; Covid Graph GraphQL API, Spring Data Neo4j 6 Experiments, CompoundDB4j&quot;&#125;)-   [rel:ENTITY]-&gt;(e)</span><br><span class="line">WITH a, e, rel</span><br><span class="line">ORDER BY rel.score DESC</span><br><span class="line">RETURN collect(e.text + &quot;:&quot; + rel.score)[..3] AS entities</span><br></pre></td></tr></table></figure>
+<p>result:<br><img src="https://ftp.bmp.ovh/imgs/2021/03/214501e331d47774.png"></p>
+</li>
+<li><p>我们使用剩下两个<code>QuickGraph</code>作为推荐的特征</p>
+</li>
+</ol>
+  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MATCH (a:Article)-[rel:ENTITY]-&gt;(e:Entity&#123;text:&quot;QuickGraph&quot;&#125;)</span><br><span class="line">WITH a, e, rel</span><br><span class="line">ORDER BY a.date DESC, rel.score DESC</span><br><span class="line">RETURN (a.title),  collect(e.text)[..3] AS entities</span><br><span class="line">LIMIT 10;</span><br></pre></td></tr></table></figure>
+
+<p>  Result:<br>  <img src="https://ftp.bmp.ovh/imgs/2021/03/44f6cc7d0bd6fe03.png"></p>
+<p>得出的结果就是和<code>QuickGraph</code>相关的文章。</p>
+<p>次过程仅限于实验使用，实际用途中，整个推荐筛选还需要更细致的设计和实现。</p>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/%E5%9F%BA%E4%BA%8EKnowlege-Graph%20%E7%9A%84%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/" class="article-date">
+  <time class="dt-published" datetime="2021-03-08T06:12:14.000Z" itemprop="datePublished">2021-03-08</time>
+</a>
+
+        </li>
+        
+          <li>
+            <span class="label">Category:</span>
+            
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Tech/">Tech</a>
+  </div>
+
+
+          </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Neo4j-NLP-%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/" rel="tag">Neo4j, NLP, 推荐系统</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/Neo4j%20%E8%AE%BA%E6%96%87%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          基于Neo4j的医学论文推荐系统
+        
+      </div>
+    </a>
+  
+  
+    <a href="/Neo4j%20NLP%20%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Neo4j NLP 自然语言处理</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>ipsum dolor sit amet, <strong>consectetur adipiscing elit.</strong> Fusce eget urna vitae velit <em>eleifend interdum at ac nisi. In nec ligula lacus. Cum sociis natoque</em> penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed eu cursus erat, ut dapibus quam. Post</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/typing.js"></script>
+
+<!--[if lt IE 9]>
+<script src="https://cdn.jsdelivr.net/npm/html5shiv@3/dist/html5shiv.min.js"></script>
+<![endif]-->
+
+
+
+
+
+
+
+    </div>
+  </body>
+</html>

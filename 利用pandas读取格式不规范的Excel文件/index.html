@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  
+  <title>利用pandas读取格式不规范的Excel文件 | 香菜粉丝</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="介绍pandas 很容易将Excel文件读取为DataFrame，但是在现实中，Excel文件里面的数据格式往往是不规范的，在那些数据分散在不同Sheet的情况下，就需要自定义读取数据的方式，这篇文章将讨论如何用pandas和openpyxl读取这类格式的Excel文件，将里面的数据转换为DataFrame以便进一步的分析工作。 数据的问题pandas内的read_excel方法在读取Excel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用pandas读取格式不规范的Excel文件">
+<meta property="og:url" content="https://blog.xcfans.top/%E5%88%A9%E7%94%A8pandas%E8%AF%BB%E5%8F%96%E6%A0%BC%E5%BC%8F%E4%B8%8D%E8%A7%84%E8%8C%83%E7%9A%84Excel%E6%96%87%E4%BB%B6/index.html">
+<meta property="og:site_name" content="香菜粉丝">
+<meta property="og:description" content="介绍pandas 很容易将Excel文件读取为DataFrame，但是在现实中，Excel文件里面的数据格式往往是不规范的，在那些数据分散在不同Sheet的情况下，就需要自定义读取数据的方式，这篇文章将讨论如何用pandas和openpyxl读取这类格式的Excel文件，将里面的数据转换为DataFrame以便进一步的分析工作。 数据的问题pandas内的read_excel方法在读取Excel">
+<meta property="og:locale">
+<meta property="og:image" content="https://pbpython.com/images/excel_range_header_3.png">
+<meta property="og:image" content="https://pbpython.com/images/excel_ranges.png">
+<meta property="og:image" content="https://pbpython.com/images/excel_range_dataframe.png">
+<meta property="og:image" content="https://pbpython.com/images/excel_range_dataframe_clean.png">
+<meta property="og:image" content="https://pbpython.com/images/excel_named_table-2.png">
+<meta property="og:image" content="https://pbpython.com/images/excel_shipping_dataframe.png">
+<meta property="article:published_time" content="2020-09-12T10:14:33.000Z">
+<meta property="article:modified_time" content="2022-05-14T15:20:37.220Z">
+<meta property="article:author" content="Shangjin">
+<meta property="article:tag" content="pandas">
+<meta property="article:tag" content="excel">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pbpython.com/images/excel_range_header_3.png">
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/typing.css">
+
+  
+<link rel="stylesheet" href="/css/donate.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-利用pandas读取格式不规范的Excel文件" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <header id="header" class="header">
+  <nav class="mobile-nav">
+    <h1 class="nickname">NickName</h1>
+    <ul class="mobile-nav-menu">
+      <label for="mobile-menu-toggle"><a id="menu-button">&#9776; Menu</a></label>
+      <input type="checkbox" id="mobile-menu-toggle"/>
+      <ul class="mobile-nav-link">
+        
+        <a href="/">Home</a>
+        
+        <a href="/archives">Archives</a>
+        
+        <a href="/about">About</a>
+        
+      </ul>
+    </ul>
+  </nav>
+	
+		<nav id="main-nav" class="main-nav nav-left">
+	
+	
+	  <a class="main-nav-link" href="/">Home</a>
+	
+	  <a class="main-nav-link" href="/archives">Archives</a>
+	
+	  <a class="main-nav-link" href="/about">About</a>
+	
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      利用pandas读取格式不规范的Excel文件
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry typo" itemprop="articleBody">
+      
+        <p><img src="https://pbpython.com/images/excel_range_header_3.png" alt="excel_range_header_3"></p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p><code>pandas</code> 很容易将Excel文件读取为<code>DataFrame</code>，但是在现实中，Excel文件里面的数据格式往往是不规范的，在那些数据分散在不同Sheet的情况下，就需要自定义读取数据的方式，这篇文章将讨论如何用<code>pandas</code>和<code>openpyxl</code>读取这类格式的Excel文件，将里面的数据转换为<code>DataFrame</code>以便进一步的分析工作。</p>
+<h2 id="数据的问题"><a href="#数据的问题" class="headerlink" title="数据的问题"></a>数据的问题</h2><p><code>pandas</code>内的<code>read_excel</code>方法在读取Excel工作表方面非常高效好用，无论如何，当数据在表中不是以连续的形式存储的话，读取出来的数据可能就和预期的不同了。</p>
+<p>当你尝试用<code>read_excel</code>读取下面图中所示的这种数据格式时：</p>
+<p><img src="https://pbpython.com/images/excel_ranges.png" alt="excel_ranges"></p>
+<p>你将得到如下结果：</p>
+<p><img src="https://pbpython.com/images/excel_range_dataframe.png" alt="excel_range_dataframe"></p>
+<p>上面的结果包含了很多<code>Unnamed</code> 的列。</p>
+<h2 id="Pandas-解决方案"><a href="#Pandas-解决方案" class="headerlink" title="Pandas 解决方案"></a>Pandas 解决方案</h2><p>最简单的方案</p>
+<p>此数据集的最简单解决方案是在<code>read_excel（）</code>方法中使用<code>header</code>和<code>usecols</code>参数，特别是<code>usecols</code>对于控制想要提取的数据列很有用。</p>
+<p>这些例子的所有文件都在<a target="_blank" rel="noopener" href="https://github.com/chris1610/pbpython/blob/master/data/shipping_tables.xlsx">github</a></p>
+<p>下面是一种我们提取数据的方法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path</span><br><span class="line">src_file = Path.cwd() /  <span class="string">&#x27;shipping_tables.xlsx&#x27;</span></span><br><span class="line"></span><br><span class="line">df = pd.read_excel(src_file, header=<span class="number">1</span>, usecols=<span class="string">&#x27;B:F&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>下面是得到的结果</p>
+<p><img src="https://pbpython.com/images/excel_range_dataframe_clean.png" alt="excel_range_dataframe_clean"></p>
+<p>逻辑很简单，<code>usecols</code>参数接受Excel文件中的列范围，比如（B:F）,表示程序只读取这个范围内的数据，<code>header</code>参数需要一个用于定义标题列的整数。1表示Excel中的第二行。</p>
+<p>在一些实例中，我们可能想用数字列表来表示所要提取数据的列：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">df = pd.read_excel(src_file, header=<span class="number">1</span>, usecols=[<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>])</span><br></pre></td></tr></table></figure>
+
+<p>如果在对大型数据集使用这种数字模式（每三列，或仅偶数列）那这个方法就很有用。</p>
+<p><code>usecols</code>还可以使用列名来表示，如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">df = pd.read_excel(</span><br><span class="line">    src_file,</span><br><span class="line">    header=<span class="number">1</span>,</span><br><span class="line">    usecols=[<span class="string">&#x27;item_type&#x27;</span>, <span class="string">&#x27;order id&#x27;</span>, <span class="string">&#x27;order date&#x27;</span>, <span class="string">&#x27;state&#x27;</span>, <span class="string">&#x27;priority&#x27;</span>])</span><br></pre></td></tr></table></figure>
+
+<p>如果确认这些列名不会改变，那是用上面的方法实现也很方便。</p>
+<p>最后，<code>usecols</code>的高级用法，回调函数，下面的例子实现了将<code>unnamed</code>和<code>priority</code>过滤掉的功能</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Define a more complex function:</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">column_check</span>(<span class="params">x</span>):</span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;unnamed&#x27;</span> <span class="keyword">in</span> x.lower():</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;priority&#x27;</span> <span class="keyword">in</span> x.lower():</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span></span><br><span class="line">    <span class="keyword">if</span> <span class="string">&#x27;order&#x27;</span> <span class="keyword">in</span> x.lower():</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">True</span></span><br><span class="line"></span><br><span class="line">df = pd.read_excel(src_file, header=<span class="number">1</span>, usecols=column_check)</span><br></pre></td></tr></table></figure>
+
+<p>使用回调函数的另一个方法是用<code>lambda</code>表达式，通过判断列名是否在我们的定义好的列表中。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cols_to_use = [<span class="string">&#x27;item_type&#x27;</span>, <span class="string">&#x27;order id&#x27;</span>, <span class="string">&#x27;order date&#x27;</span>, <span class="string">&#x27;state&#x27;</span>, <span class="string">&#x27;priority&#x27;</span>]</span><br><span class="line">df = pd.read_excel(src_file,</span><br><span class="line">                   header=<span class="number">1</span>,</span><br><span class="line">                   usecols=<span class="keyword">lambda</span> x: x.lower() <span class="keyword">in</span> cols_to_use)</span><br></pre></td></tr></table></figure>
+
+<p>回调函数给了我们灵活的方式去处理真实世界里的Excel文件</p>
+<h2 id="范围和表格"><a href="#范围和表格" class="headerlink" title="范围和表格"></a>范围和表格</h2><p>在一些情况中，Excel表中的数据会很混乱，举个例子，我们有一个表叫<code>ship_cost</code>我们想把它读取出来。</p>
+<p><img src="https://pbpython.com/images/excel_named_table-2.png" alt="excel_named_table-2"></p>
+<p>在这里，我们可以直接使用<code>openpyxl</code>来解析文件将数据转换为<code>DataFrame</code>，这样处理Excel实际上更容易点。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> openpyxl <span class="keyword">import</span> load_workbook</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">from</span> pathlib <span class="keyword">import</span> Path</span><br><span class="line">src_file = src_file = Path.cwd() / <span class="string">&#x27;shipping_tables.xlsx&#x27;</span></span><br><span class="line"></span><br><span class="line">wb = load_workbook(filename = src_file)</span><br></pre></td></tr></table></figure>
+
+<p>上面加在了所有的<code>worksheet</code>，如果你想看所有的<code>sheet</code></p>
+<p><code>wb.sheetnames</code></p>
+<p><code>[&#39;sales&#39;, &#39;shipping_rates&#39;]</code></p>
+<p>访问指定的列</p>
+<p><code>sheet = wb[&#39;shipping_rates&#39;]</code></p>
+<p>列出所有的表明</p>
+<p><code>sheet.tables.keys()</code></p>
+<p><code>dict_keys([&#39;ship_cost&#39;])</code></p>
+<p>该键对应于我们在Excel中分配给表的名称。现在我们访问表以获取等效的Excel范围</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lookup_table = sheet.tables[<span class="string">&#x27;ship_cost&#x27;</span>]</span><br><span class="line">lookup_table.ref</span><br></pre></td></tr></table></figure>
+
+<p><code>&#39;C8:E16&#39;</code></p>
+<p>现在我们知道了我们加载的数据范围，最后一步是将它转换为DataFrame格式。</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Access the data in the table range</span></span><br><span class="line">data = sheet[lookup_table.ref]</span><br><span class="line">rows_list = []</span><br><span class="line"></span><br><span class="line"><span class="comment"># Loop through each row and get the values in the cells</span></span><br><span class="line"><span class="keyword">for</span> row <span class="keyword">in</span> data:</span><br><span class="line">    <span class="comment"># Get a list of all columns in each row</span></span><br><span class="line">    cols = []</span><br><span class="line">    <span class="keyword">for</span> col <span class="keyword">in</span> row:</span><br><span class="line">        cols.append(col.value)</span><br><span class="line">    rows_list.append(cols)</span><br><span class="line"></span><br><span class="line"><span class="comment"># Create a pandas dataframe from the rows_list.</span></span><br><span class="line"><span class="comment"># The first row is the column names</span></span><br><span class="line">df = pd.DataFrame(data=rows_list[<span class="number">1</span>:], index=<span class="literal">None</span>, columns=rows_list[<span class="number">0</span>])</span><br></pre></td></tr></table></figure>
+
+<p>下面是结果</p>
+<p><img src="https://pbpython.com/images/excel_shipping_dataframe.png" alt="excel_shipping_dataframe"></p>
+<p>现在，我们有一个干净整齐的表以便我们后面的分析操作了！</p>
+<blockquote>
+<p>此文章翻译自<a target="_blank" rel="noopener" href="https://pbpython.com/pandas-excel-range.html">https://pbpython.com/pandas-excel-range.html</a></p>
+</blockquote>
+
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/%E5%88%A9%E7%94%A8pandas%E8%AF%BB%E5%8F%96%E6%A0%BC%E5%BC%8F%E4%B8%8D%E8%A7%84%E8%8C%83%E7%9A%84Excel%E6%96%87%E4%BB%B6/" class="article-date">
+  <time class="dt-published" datetime="2020-09-12T10:14:33.000Z" itemprop="datePublished">2020-09-12</time>
+</a>
+
+        </li>
+        
+          <li>
+            <span class="label">Category:</span>
+            
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Tech/">Tech</a>
+  </div>
+
+
+          </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/excel/" rel="tag">excel</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/pandas/" rel="tag">pandas</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/Neo4j%20Desktop%20for%20Mac%20%E5%A6%82%E4%BD%95%E5%AE%89%E8%A3%85plugin%20APOC/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Neo4j Desktop for Mac 如何安装Plugin APOC
+        
+      </div>
+    </a>
+  
+  
+    <a href="/%E3%80%8A%E6%B2%89%E6%80%9D%E5%BD%95%E3%80%8B%E6%91%98%E5%BD%95/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《沉思录》摘录</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>ipsum dolor sit amet, <strong>consectetur adipiscing elit.</strong> Fusce eget urna vitae velit <em>eleifend interdum at ac nisi. In nec ligula lacus. Cum sociis natoque</em> penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed eu cursus erat, ut dapibus quam. Post</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/typing.js"></script>
+
+<!--[if lt IE 9]>
+<script src="https://cdn.jsdelivr.net/npm/html5shiv@3/dist/html5shiv.min.js"></script>
+<![endif]-->
+
+
+
+
+
+
+
+    </div>
+  </body>
+</html>

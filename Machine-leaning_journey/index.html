@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  
+  <title>Machine leaning - 为什么需要策略 | 香菜粉丝</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这本书能从哪些方面帮助到我进一步理解如何为一个机器学习项目设定技术方向。 先修知识与符号说明 监督学习 使用标注（labeled）的训练样本(x, y）来学习一个从x映射到y的函数。  监督学习包括了:  线性回归（liner regression）-  逻辑回归（logistic regression）-  神经网络（neural network）-   当前具备实用价值的大部分机器学习算法都来">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Machine leaning - 为什么需要策略">
+<meta property="og:url" content="https://blog.xcfans.top/Machine-leaning_journey/index.html">
+<meta property="og:site_name" content="香菜粉丝">
+<meta property="og:description" content="这本书能从哪些方面帮助到我进一步理解如何为一个机器学习项目设定技术方向。 先修知识与符号说明 监督学习 使用标注（labeled）的训练样本(x, y）来学习一个从x映射到y的函数。  监督学习包括了:  线性回归（liner regression）-  逻辑回归（logistic regression）-  神经网络（neural network）-   当前具备实用价值的大部分机器学习算法都来">
+<meta property="og:locale">
+<meta property="article:published_time" content="2021-03-30T05:40:25.000Z">
+<meta property="article:modified_time" content="2022-05-14T15:20:37.216Z">
+<meta property="article:author" content="Shangjin">
+<meta property="article:tag" content="策略">
+<meta name="twitter:card" content="summary">
+  
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+  
+  
+<link rel="stylesheet" href="/css/typing.css">
+
+  
+<link rel="stylesheet" href="/css/donate.css">
+
+  
+  
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+  
+<meta name="generator" content="Hexo 6.2.0"></head>
+
+  
+    
+      <body>
+    
+  
+      <div id="container" class="container">
+        <article id="post-Machine-leaning_journey" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <header id="header" class="header">
+  <nav class="mobile-nav">
+    <h1 class="nickname">NickName</h1>
+    <ul class="mobile-nav-menu">
+      <label for="mobile-menu-toggle"><a id="menu-button">&#9776; Menu</a></label>
+      <input type="checkbox" id="mobile-menu-toggle"/>
+      <ul class="mobile-nav-link">
+        
+        <a href="/">Home</a>
+        
+        <a href="/archives">Archives</a>
+        
+        <a href="/about">About</a>
+        
+      </ul>
+    </ul>
+  </nav>
+	
+		<nav id="main-nav" class="main-nav nav-left">
+	
+	
+	  <a class="main-nav-link" href="/">Home</a>
+	
+	  <a class="main-nav-link" href="/archives">Archives</a>
+	
+	  <a class="main-nav-link" href="/about">About</a>
+	
+  </nav>
+</header>
+
+  <hr/>
+  <div class="article-inner">
+    
+
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      Machine leaning - 为什么需要策略
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry typo" itemprop="articleBody">
+      
+        <h2 id="这本书能从哪些方面帮助到我"><a href="#这本书能从哪些方面帮助到我" class="headerlink" title="这本书能从哪些方面帮助到我"></a>这本书能从哪些方面帮助到我</h2><p>进一步理解如何为一个机器学习项目设定技术方向。</p>
+<h2 id="先修知识与符号说明"><a href="#先修知识与符号说明" class="headerlink" title="先修知识与符号说明"></a>先修知识与符号说明</h2><ol>
+<li>监督学习<ol>
+<li><p>使用标注（labeled）的训练样本(x, y）来学习一个从x映射到y的函数。</p>
+</li>
+<li><p>监督学习包括了:</p>
+<ol>
+<li>线性回归（liner regression）- </li>
+<li>逻辑回归（logistic regression）- </li>
+<li>神经网络（neural network）-</li>
+</ol>
+</li>
+<li><p>当前具备实用价值的大部分机器学习算法都来自于监督学习</p>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="规模驱动机器学习发展"><a href="#规模驱动机器学习发展" class="headerlink" title="规模驱动机器学习发展"></a>规模驱动机器学习发展</h2><ol>
+<li>数据可行性（data availability）- 越来越多的应用数据在实际生活产生</li>
+<li>计算规模（computational scale）-</li>
+</ol>
+<blockquote>
+<p>即使你积累了更多的数据，但应用在类似罗辑回归这种传统的学习算法上，其性能（performance）会趋于“平稳”，意味着即便提供更多的数据，performance curve也将变得平缓</p>
+</blockquote>
+<p>在同样的监督学习任务中， 选择一个小型的神经网络（neutral network, NN）可能会获得较好的performance。</p>
+<p>上面所说的“小型神经“是指含有少量的隐藏元&#x2F;层&#x2F;参数的神经网络。如果训练的神经网路规模越大，最终的performance也将更好。</p>
+<p>如何获得最佳的性能：</p>
+<ol>
+<li>训练大型的神经网络</li>
+<li>拥有海量的数据</li>
+</ol>
+<h2 id="开发集和测试集的定义"><a href="#开发集和测试集的定义" class="headerlink" title="开发集和测试集的定义"></a>开发集和测试集的定义</h2><p>开发集和测试集的使命就是引导你的团队对机器学习系统做出最重要的改变。</p>
+<ol>
+<li>合理的选择开发集和测试集，使之能够代表将来实际数据的情况，并期望算法能够运行良好。</li>
+</ol>
+<h2 id="开发集和测试集应该服从同一分布"><a href="#开发集和测试集应该服从同一分布" class="headerlink" title="开发集和测试集应该服从同一分布"></a>开发集和测试集应该服从同一分布</h2>
+      
+      
+    </div>
+    <footer class="article-footer">
+      <ul class="article-meta">
+        <li>
+          <span class="label">Published Date:</span>
+          <a href="/Machine-leaning_journey/" class="article-date">
+  <time class="dt-published" datetime="2021-03-30T05:40:25.000Z" itemprop="datePublished">2021-03-30</time>
+</a>
+
+        </li>
+        
+          <li>
+            <span class="label">Category:</span>
+            
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/Tech-Machine-Leaning/">Tech, Machine Leaning</a>
+  </div>
+
+
+          </li>
+        
+        
+          <li>
+            <span class="label">Tag:</span>
+            
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E7%AD%96%E7%95%A5/" rel="tag">策略</a></li></ul>
+
+
+          </li>
+        
+        <hr/>
+      </ul>
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav" class="article-nav">
+  
+    <a href="/%E5%A6%82%E4%BD%95%E7%94%A8Kivy%E5%BC%80%E5%8F%91%E8%B7%A8%E5%B9%B3%E5%8F%B0%E7%9A%84%E6%A1%8C%E9%9D%A2%E5%BA%94%E7%94%A8/" id="article-nav-newer" class="article-nav-link-wrap newer">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          如何用Kivy开发跨平台的桌面应用
+        
+      </div>
+    </a>
+  
+  
+    <a href="/Tech-Sharing-Graph/" id="article-nav-older" class="article-nav-link-wrap older">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Tech-Sharing-graph</div>
+    </a>
+  
+</nav>
+
+
+  
+</article>
+
+
+
+
+
+
+
+
+
+
+      </div>
+      
+    <footer id="footer" class="post-footer footer">
+      
+      <hr/>
+      <div id="footerContent" class="footer-content">
+        <p>ipsum dolor sit amet, <strong>consectetur adipiscing elit.</strong> Fusce eget urna vitae velit <em>eleifend interdum at ac nisi. In nec ligula lacus. Cum sociis natoque</em> penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed eu cursus erat, ut dapibus quam. Post</p>
+
+
+      </div>
+    </footer>
+
+      
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+
+
+
+  
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/typing.js"></script>
+
+<!--[if lt IE 9]>
+<script src="https://cdn.jsdelivr.net/npm/html5shiv@3/dist/html5shiv.min.js"></script>
+<![endif]-->
+
+
+
+
+
+
+
+    </div>
+  </body>
+</html>
